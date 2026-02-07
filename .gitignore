@@ -1,0 +1,33 @@
+# Secrets (NEVER commit)
+.env
+.env.local
+.env.*.local
+.secrets
+*.secrets
+.secrets.vault/active/
+*.pem
+*.key
+
+# Node
+node_modules/
+dist/
+.turbo/
+*.tsbuildinfo
+
+# State & artifacts
+_state/
+*.log
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docker
+*.tar
