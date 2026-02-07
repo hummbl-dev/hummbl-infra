@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hummbl.io/schemas/metrics-event.json",
+  "title": "Metrics Event Schema",
+  "description": "Schema for HUMMBL observability events (Base120: SY18)",
+  "type": "object",
+
+  "required": ["timestamp", "event_type", "source", "correlation_id"],
+
+  "properties": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "command.started",
+        "command.completed",
+        "command.failed",
+        "budget.threshold_crossed",
+        "api.request",
+        "router.decision",
+        "alert.triggered",
+        "integration.dispatch",
+        "applicationPoint.resolved",
+        "selector.invoked",
+        "binding.applied",
+        "routing.failed"
+      ],
+      "description": "Type of event"
+    },
+    "source": {
+      "type": "string",
+      "description": "Service or component that emitted the event"
+    },
+    "correlation_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "UUID for request tracing"
+    },
+    "duration_ms": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Duration in milliseconds"
+    },
+    "exit_code": {
+      "type": "integer",
+      "description": "Exit code for command events"
+    },
+    "cost_usd": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Cost in USD for budget events"
+    },
+    "transformation": {
+      "type": "string",
+      "pattern": "^(P|IN|CO|DE|RE|SY)[0-9]{1,2}$",
+      "description": "Base120 transformation code"
+    },
+    "tags": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "description": "Key-value tags for filtering"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Event-specific metadata"
+    }
+  },
+
+  "allOf": [
+    {
+      "if": {
+        "properties": { "event_type": { "const": "command.completed" } }
+      },
+      "then": {
+        "required": ["duration_ms", "exit_code"]
+      }
+    },
+    {
+      "if": {
+        "properties": { "event_type": { "const": "command.failed" } }
+      },
+      "then": {
+        "required": ["exit_code"],
+        "properties": {
+          "metadata": {
+            "properties": {
+              "error_message": { "type": "string" }
+            },
+            "required": ["error_message"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "event_type": { "const": "budget.threshold_crossed" } }
+      },
+      "then": {
+        "required": ["cost_usd"],
+        "properties": {
+          "metadata": {
+            "properties": {
+              "threshold_name": { "type": "string" }
+            },
+            "required": ["threshold_name"]
+          }
+        }
+      }
+    }
+  ],
+
+  "additionalProperties": false
+}

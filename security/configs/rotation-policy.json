@@ -1,0 +1,208 @@
+{
+  "$schema": "../schemas/rotation-policy.schema.json",
+  "version": "1.0.0",
+  "description": "Secret rotation policy configuration. Base120: IN2 (premortem), SY18 (telemetry)",
+  "defaults": {
+    "rotation_interval_days": 90,
+    "warning_before_days": 14,
+    "critical_before_days": 7,
+    "auto_rotate": false,
+    "require_approval": true,
+    "notify_channels": ["slack", "email"]
+  },
+  "tiers": {
+    "tier1": {
+      "name": "Critical",
+      "description": "Payment, auth, infrastructure credentials",
+      "rotation_interval_days": 30,
+      "max_exposure_response_hours": 1,
+      "warning_before_days": 7,
+      "critical_before_days": 3,
+      "require_dual_control": true,
+      "auto_rotate": false,
+      "notify_on_rotation": true,
+      "patterns": [
+        "*_STRIPE_*",
+        "*_PAYMENT_*",
+        "*_JWT_SECRET*",
+        "*_AUTH_*",
+        "*_AWS_*",
+        "*_GCP_*",
+        "*_SSH_*",
+        "*_DATABASE_*",
+        "*_DB_PASSWORD*",
+        "*_MASTER_KEY*"
+      ]
+    },
+    "tier2": {
+      "name": "High",
+      "description": "Third-party API keys, internal service tokens",
+      "rotation_interval_days": 60,
+      "max_exposure_response_hours": 4,
+      "warning_before_days": 14,
+      "critical_before_days": 7,
+      "require_dual_control": false,
+      "auto_rotate": false,
+      "notify_on_rotation": true,
+      "patterns": [
+        "*_OPENAI_*",
+        "*_ANTHROPIC_*",
+        "*_API_KEY*",
+        "*_SECRET_KEY*",
+        "*_TWILIO_*",
+        "*_SENDGRID_*",
+        "*_DATADOG_*",
+        "*_SENTRY_*",
+        "*_REDIS_*",
+        "*_SERVICE_TOKEN*"
+      ]
+    },
+    "tier3": {
+      "name": "Medium",
+      "description": "Development keys, analytics, logging",
+      "rotation_interval_days": 90,
+      "max_exposure_response_hours": 24,
+      "warning_before_days": 14,
+      "critical_before_days": 7,
+      "require_dual_control": false,
+      "auto_rotate": false,
+      "notify_on_rotation": false,
+      "patterns": [
+        "*_DEV_*",
+        "*_TEST_*",
+        "*_ANALYTICS_*",
+        "*_LOGGING_*",
+        "*_STAGING_*"
+      ]
+    },
+    "tier4": {
+      "name": "Low",
+      "description": "Public API keys, demo credentials",
+      "rotation_interval_days": 180,
+      "max_exposure_response_hours": 72,
+      "warning_before_days": 30,
+      "critical_before_days": 14,
+      "require_dual_control": false,
+      "auto_rotate": false,
+      "notify_on_rotation": false,
+      "patterns": [
+        "*_PUBLIC_*",
+        "*_DEMO_*",
+        "*_SANDBOX_*",
+        "*_MAPS_KEY*"
+      ]
+    }
+  },
+  "stores": {
+    "keychain": {
+      "name": "macOS Keychain",
+      "type": "native",
+      "supported": true,
+      "default_for": ["development", "local"],
+      "backup_to": null
+    },
+    "1password": {
+      "name": "1Password",
+      "type": "vault",
+      "supported": true,
+      "default_for": ["production", "staging"],
+      "backup_to": "keychain",
+      "vault_name": "hummbl-secrets",
+      "require_cli": true
+    },
+    "env_file": {
+      "name": "Environment File",
+      "type": "file",
+      "supported": true,
+      "default_for": [],
+      "backup_to": null,
+      "warning": "Least secure option, use for development only",
+      "file_path": "${HOME}/.env.local"
+    }
+  },
+  "audit": {
+    "log_directory": "_state/audit/secrets",
+    "retention_days": 365,
+    "log_format": "jsonl",
+    "include_rotation_id": true,
+    "include_timestamp": true,
+    "never_log_values": true,
+    "events": [
+      "rotate_start",
+      "rotate_success",
+      "rotate_failed",
+      "rollback_start",
+      "rollback_success",
+      "rollback_failed",
+      "expiry_warning",
+      "expiry_critical"
+    ]
+  },
+  "notifications": {
+    "channels": {
+      "slack": {
+        "enabled": true,
+        "webhook_secret_name": "SLACK_SECURITY_WEBHOOK",
+        "channel": "#security-alerts",
+        "notify_on": ["rotate_success", "rotate_failed", "expiry_critical", "rollback_success"]
+      },
+      "email": {
+        "enabled": false,
+        "recipients_secret_name": "SECURITY_TEAM_EMAILS",
+        "notify_on": ["rotate_failed", "expiry_critical"]
+      }
+    },
+    "escalation": {
+      "tier1_exposure": {
+        "immediate": ["slack", "email"],
+        "if_no_response_minutes": 15,
+        "escalate_to": "pagerduty"
+      },
+      "tier2_exposure": {
+        "immediate": ["slack"],
+        "if_no_response_minutes": 60,
+        "escalate_to": "email"
+      }
+    }
+  },
+  "secrets_registry": {
+    "enabled": true,
+    "file": "configs/secrets-registry.yaml",
+    "track_fields": [
+      "name",
+      "tier",
+      "store",
+      "last_rotated",
+      "expires_at",
+      "owner",
+      "description"
+    ],
+    "auto_update_on_rotation": true
+  },
+  "compliance": {
+    "soc2": {
+      "max_rotation_interval_days": 90,
+      "require_audit_trail": true,
+      "require_dual_control_tier1": true
+    },
+    "hipaa": {
+      "max_rotation_interval_days": 60,
+      "require_audit_trail": true,
+      "require_dual_control_tier1": true,
+      "require_encryption_at_rest": true
+    },
+    "pci_dss": {
+      "max_rotation_interval_days": 90,
+      "require_audit_trail": true,
+      "require_dual_control_tier1": true,
+      "require_unique_credentials": true
+    }
+  },
+  "rollback": {
+    "enabled": true,
+    "retention_hours": 72,
+    "store": "keychain",
+    "require_confirmation": true,
+    "audit_rollback": true
+  }
+}

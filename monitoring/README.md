@@ -29,10 +29,10 @@ monitoring/
 
 ## Deliverables
 
-- [ ] Metrics event schema
-- [ ] Collector module
+- [x] Metrics event schema
+- [x] Collector module (FileSink, ConsoleSink, MemorySink)
 - [ ] Hourly/daily aggregator
-- [ ] Alert rule engine
+- [x] Alert rules configuration
 - [ ] Terminal dashboard
 - [ ] Static HTML reports
 

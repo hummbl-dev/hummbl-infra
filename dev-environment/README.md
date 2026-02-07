@@ -31,10 +31,10 @@ dev-environment/
 
 ## Deliverables
 
-- [ ] Setup script suite (01-07)
-- [ ] Secrets vault structure
-- [ ] 1Password/keychain integration
-- [ ] Docker Compose stack
+- [x] Setup script suite (setup.sh orchestrator)
+- [x] Secrets vault structure
+- [ ] 1Password/keychain integration (documented)
+- [x] Docker Compose stack
 - [ ] Onboarding documentation
 
 ## Critical Security Note

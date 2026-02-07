@@ -1,0 +1,89 @@
+# HUMMBL Development Services
+# Base120: CO5 (Composition) - Composable service stack
+#
+# Usage:
+#   docker compose up -d                        # Start default services
+#   docker compose --profile local-llm up -d   # Include Ollama
+#   docker compose --profile vector up -d       # Include Qdrant
+
+services:
+  # PostgreSQL 16 - Primary database
+  postgres:
+    image: postgres:16-alpine
+    container_name: hummbl-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-hummbl}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hummbl_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-hummbl}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hummbl}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Redis 7 - Cache and pub/sub
+  redis:
+    image: redis:7-alpine
+    container_name: hummbl-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Ollama - Local LLM (optional)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: hummbl-ollama
+    profiles:
+      - local-llm
+    restart: unless-stopped
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  # Qdrant - Vector database (optional)
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: hummbl-qdrant
+    profiles:
+      - vector
+    restart: unless-stopped
+    ports:
+      - "${QDRANT_HTTP_PORT:-6333}:6333"
+      - "${QDRANT_GRPC_PORT:-6334}:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    name: hummbl-postgres-data
+  redis_data:
+    name: hummbl-redis-data
+  ollama_data:
+    name: hummbl-ollama-data
+  qdrant_data:
+    name: hummbl-qdrant-data
+
+networks:
+  default:
+    name: hummbl-network

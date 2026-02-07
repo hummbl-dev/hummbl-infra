@@ -29,13 +29,15 @@ security/
 
 ## Deliverables
 
-- [ ] RBAC model documentation
-- [ ] Secrets rotation script
+- [x] RBAC model documentation (`docs/RBAC_MODEL.md`)
+- [x] Secrets rotation script (`scripts/rotate-secret.sh`)
 - [ ] Secret expiry checker
-- [ ] Incident response runbook
-- [ ] Secret exposure runbook
+- [x] Incident response runbook (`docs/runbooks/INCIDENT_RESPONSE.md`)
+- [x] Secret exposure runbook (`docs/runbooks/SECRET_EXPOSURE_RESPONSE.md`)
 - [ ] Compliance matrix
 - [ ] Security test suite
+- [x] Incident record schema (`schemas/incident-record.schema.json`)
+- [x] Rotation policy config (`configs/rotation-policy.json`)
 
 ## RBAC Model
 

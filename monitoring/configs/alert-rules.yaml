@@ -1,0 +1,97 @@
+# HUMMBL Alert Rules Configuration
+# Base120: SY18 (Measurement & Telemetry), IN2 (Premortem)
+
+version: "1.0.0"
+
+rules:
+  # Budget alerts
+  - id: budget-warning
+    name: "Budget Warning (50%)"
+    enabled: true
+    condition:
+      type: threshold
+      metric: gauges.daily_cost_usd
+      operator: ">="
+      value_from: thresholds.budget.daily_limit_usd * 0.5
+    severity: warning
+    actions:
+      - type: console
+      - type: file
+    fatigue:
+      cooldown_seconds: 3600
+      dedup_key: "budget_warning"
+
+  - id: budget-critical
+    name: "Budget Critical (80%)"
+    enabled: true
+    condition:
+      type: threshold
+      metric: gauges.daily_cost_usd
+      operator: ">="
+      value_from: thresholds.budget.daily_limit_usd * 0.8
+    severity: critical
+    actions:
+      - type: console
+      - type: file
+    fatigue:
+      cooldown_seconds: 1800
+      dedup_key: "budget_critical"
+
+  # API success rate
+  - id: api-success-rate-low
+    name: "API Success Rate < 95%"
+    enabled: true
+    condition:
+      type: threshold
+      metric: gauges.api_success_rate
+      operator: "<"
+      value: 0.95
+      window: "5m"
+    severity: warning
+    actions:
+      - type: console
+    fatigue:
+      cooldown_seconds: 300
+      dedup_key: "api_success_rate"
+
+  # Command failures
+  - id: command-failure-spike
+    name: "Command Failure Spike"
+    enabled: true
+    condition:
+      type: threshold
+      metric: counters.command_failed
+      operator: ">="
+      value: 5
+      window: "5m"
+    severity: warning
+    actions:
+      - type: console
+    fatigue:
+      cooldown_seconds: 600
+      dedup_key: "command_failures"
+
+  # Routing failures
+  - id: routing-failures
+    name: "High Routing Failure Rate"
+    enabled: true
+    condition:
+      type: threshold
+      metric: gauges.routing_failure_rate
+      operator: ">"
+      value: 0.10
+      window: "10m"
+    severity: critical
+    actions:
+      - type: console
+      - type: file
+    fatigue:
+      cooldown_seconds: 300
+      dedup_key: "routing_failures"
+
+defaults:
+  actions:
+    - type: console
+  fatigue:
+    cooldown_seconds: 300
+    max_per_window: 10

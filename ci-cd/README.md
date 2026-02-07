@@ -27,12 +27,12 @@ ci-cd/
 
 ## Deliverables
 
-- [ ] Dockerfile (multi-stage, multi-arch)
-- [ ] build-container.yml workflow
-- [ ] Environment configs (dev/staging/prod)
-- [ ] deploy.yml with health checks
+- [x] Dockerfile (multi-stage, multi-arch)
+- [x] build-container.yml workflow
+- [x] Environment configs (dev/staging/prod)
+- [x] deploy.yml with health checks
 - [ ] release.yml with signing
-- [ ] rollback.yml
+- [x] rollback.sh script
 
 ## Patterns
 

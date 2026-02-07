@@ -1,0 +1,81 @@
+{
+  "$schema": "../../../schemas/environment.schema.json",
+  "environment": "prod",
+  "description": "Production environment - customer-facing",
+
+  "deployment": {
+    "strategy": "blue-green",
+    "replicas": {
+      "min": 3,
+      "max": 10,
+      "desired": 3
+    },
+    "blueGreen": {
+      "previewReplicaCount": 3,
+      "autoPromotionEnabled": false,
+      "scaleDownDelaySeconds": 300
+    },
+    "timeoutSeconds": 900
+  },
+
+  "resources": {
+    "requests": {
+      "cpu": "500m",
+      "memory": "1Gi"
+    },
+    "limits": {
+      "cpu": "2000m",
+      "memory": "2Gi"
+    }
+  },
+
+  "healthCheck": {
+    "enabled": true,
+    "path": "/health",
+    "port": 3000,
+    "initialDelaySeconds": 15,
+    "periodSeconds": 10,
+    "timeoutSeconds": 5,
+    "successThreshold": 1,
+    "failureThreshold": 3
+  },
+
+  "networking": {
+    "tlsEnabled": true,
+    "ingressEnabled": true,
+    "hostnames": ["api.hummbl.io", "hummbl.io"]
+  },
+
+  "approvalGates": {
+    "required": true,
+    "approvers": ["@hummbl/platform-leads", "@hummbl/security-team"],
+    "minApprovals": 2,
+    "requireSeparateReviewers": true
+  },
+
+  "promotion": {
+    "canPromoteTo": [],
+    "requiresTests": true,
+    "testSuite": "e2e"
+  },
+
+  "observability": {
+    "logLevel": "warn",
+    "metricsEnabled": true,
+    "tracingEnabled": true,
+    "alertsEnabled": true
+  },
+
+  "compliance": {
+    "signedImages": true,
+    "sbomRequired": true,
+    "vulnerabilityScan": true,
+    "maxCriticalVulnerabilities": 0
+  },
+
+  "slo": {
+    "availability": 0.999,
+    "latencyP95Ms": 500,
+    "latencyP99Ms": 1000
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "$schema": "../schemas/thresholds.schema.json",
+  "version": "1.0.0",
+  "description": "Default threshold values for HUMMBL observability",
+
+  "budget": {
+    "daily_limit_usd": 25.00,
+    "thresholds": {
+      "info": 0.50,
+      "warning": 0.80,
+      "critical": 1.00
+    }
+  },
+
+  "api": {
+    "success_rate": {
+      "warning": 0.95,
+      "critical": 0.80
+    },
+    "latency_ms": {
+      "p95_warning": 5000,
+      "p95_critical": 10000,
+      "p99_warning": 10000,
+      "p99_critical": 30000
+    }
+  },
+
+  "commands": {
+    "success_rate": {
+      "warning": 0.80,
+      "critical": 0.50
+    },
+    "latency_ms": {
+      "p95_warning": 30000,
+      "p95_critical": 60000
+    },
+    "max_concurrent": 10
+  },
+
+  "routing": {
+    "failure_rate": {
+      "warning": 0.05,
+      "critical": 0.20
+    }
+  },
+
+  "alerts": {
+    "max_per_hour": 20,
+    "default_cooldown_seconds": 300
+  },
+
+  "retention": {
+    "raw_events_days": 7,
+    "hourly_rollups_days": 30,
+    "daily_rollups_days": 365,
+    "alerts_days": 90
+  }
+}

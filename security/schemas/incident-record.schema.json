@@ -1,0 +1,455 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hummbl.ai/schemas/security/incident-record.schema.json",
+  "title": "Incident Record Schema",
+  "description": "Schema for security incident records. Base120: SY18 (telemetry), IN2 (premortem)",
+  "type": "object",
+  "required": [
+    "incident_id",
+    "severity",
+    "status",
+    "title",
+    "detected_at",
+    "detected_by",
+    "incident_commander"
+  ],
+  "properties": {
+    "incident_id": {
+      "type": "string",
+      "pattern": "^INC-[0-9]{8}-[0-9]{2,4}$",
+      "description": "Unique incident identifier in format INC-YYYYMMDD-NN",
+      "examples": ["INC-20260207-01", "INC-20260207-102"]
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["P1", "P2", "P3", "P4"],
+      "description": "Severity classification: P1=Critical, P2=High, P3=Medium, P4=Low"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["open", "investigating", "contained", "eradicated", "recovered", "resolved", "closed"],
+      "description": "Current incident status following IR lifecycle"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 200,
+      "description": "Brief description of the incident"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the incident"
+    },
+    "incident_type": {
+      "type": "string",
+      "enum": [
+        "secret-exposure",
+        "unauthorized-access",
+        "data-breach",
+        "malware",
+        "ddos",
+        "vulnerability",
+        "policy-violation",
+        "phishing",
+        "insider-threat",
+        "third-party-breach",
+        "other"
+      ],
+      "description": "Classification of incident type"
+    },
+    "detected_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when incident was detected"
+    },
+    "detected_by": {
+      "type": "string",
+      "description": "How the incident was detected (tool, person, process)"
+    },
+    "contained_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when incident was contained"
+    },
+    "resolved_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when incident was resolved"
+    },
+    "closed_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when incident record was closed"
+    },
+    "incident_commander": {
+      "type": "string",
+      "description": "Person responsible for incident response coordination"
+    },
+    "responders": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "role"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["incident_commander", "technical_lead", "communications", "scribe", "responder"]
+          },
+          "joined_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "description": "Team members involved in incident response"
+    },
+    "timeline": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["timestamp", "action"],
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "action": {
+            "type": "string",
+            "description": "Description of action taken"
+          },
+          "actor": {
+            "type": "string",
+            "description": "Who performed the action"
+          },
+          "phase": {
+            "type": "string",
+            "enum": ["detection", "triage", "containment", "eradication", "recovery", "post-incident"]
+          }
+        }
+      },
+      "description": "Chronological record of incident response actions"
+    },
+    "affected_systems": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of systems affected by the incident"
+    },
+    "affected_data": {
+      "type": "object",
+      "properties": {
+        "types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["pii", "phi", "financial", "credentials", "source_code", "internal_docs", "customer_data", "none"]
+          }
+        },
+        "estimated_records": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "data_subjects_notified": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "description": "Information about affected data types"
+    },
+    "impact": {
+      "type": "object",
+      "properties": {
+        "users_affected": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "service_degradation": {
+          "type": "string",
+          "enum": ["none", "partial", "major", "complete"]
+        },
+        "financial_impact": {
+          "type": ["string", "null"],
+          "description": "Estimated or actual financial impact"
+        },
+        "reputational_impact": {
+          "type": "string",
+          "enum": ["none", "low", "medium", "high"]
+        }
+      },
+      "description": "Assessment of incident impact"
+    },
+    "root_cause": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "enum": [
+            "human_error",
+            "process_failure",
+            "technical_failure",
+            "external_attack",
+            "vendor_issue",
+            "configuration_error",
+            "unknown"
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "five_whys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 5
+        },
+        "contributing_factors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Root cause analysis (completed post-incident)"
+    },
+    "resolution": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "string",
+          "description": "Brief description of how incident was resolved"
+        },
+        "actions_taken": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "verification": {
+          "type": "string",
+          "description": "How resolution was verified"
+        }
+      },
+      "description": "Resolution details"
+    },
+    "action_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "description", "owner", "due_date", "status"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^AI-[0-9]+$"
+          },
+          "description": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["open", "in_progress", "completed", "blocked", "cancelled"]
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low"]
+          },
+          "completed_at": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          }
+        }
+      },
+      "description": "Follow-up action items from incident"
+    },
+    "notifications": {
+      "type": "object",
+      "properties": {
+        "internal_notified": {
+          "type": "boolean",
+          "default": false
+        },
+        "internal_notification_time": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "external_notified": {
+          "type": "boolean",
+          "default": false
+        },
+        "external_notification_time": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "regulatory_notified": {
+          "type": "boolean",
+          "default": false
+        },
+        "regulatory_body": {
+          "type": ["string", "null"]
+        },
+        "regulatory_notification_time": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        }
+      },
+      "description": "Notification tracking for compliance"
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "location"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["log", "screenshot", "memory_dump", "network_capture", "file", "other"]
+          },
+          "description": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string",
+            "description": "Path or URL to evidence"
+          },
+          "hash": {
+            "type": "string",
+            "description": "SHA-256 hash for integrity verification"
+          },
+          "collected_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "collected_by": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Evidence collected during investigation"
+    },
+    "post_mortem": {
+      "type": "object",
+      "properties": {
+        "scheduled_at": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "completed_at": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "document_url": {
+          "type": ["string", "null"],
+          "format": "uri"
+        },
+        "attendees": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Post-mortem meeting details"
+    },
+    "related_incidents": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^INC-[0-9]{8}-[0-9]{2,4}$"
+      },
+      "description": "Related incident IDs"
+    },
+    "external_references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["cve", "jira", "linear", "github", "vendor_ticket", "other"]
+          },
+          "id": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      },
+      "description": "External reference links"
+    },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "time_to_detect_minutes": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "time_to_contain_minutes": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "time_to_resolve_minutes": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "total_responder_hours": {
+          "type": ["number", "null"],
+          "minimum": 0
+        }
+      },
+      "description": "Response time metrics for continuous improvement"
+    },
+    "lessons_learned": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": ["what_went_well", "what_went_poorly", "where_we_got_lucky"]
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Key learnings from the incident"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "created_by": {
+          "type": "string"
+        },
+        "last_updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "last_updated_by": {
+          "type": "string"
+        },
+        "schema_version": {
+          "type": "string",
+          "const": "1.0.0"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}
